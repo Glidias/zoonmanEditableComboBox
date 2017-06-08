@@ -1,24 +1,25 @@
-/* 
-	ComboBox Object 
+/*
+	ComboBox Object
 	http://www.zoonman.com/projects/combobox/
-
 	Copyright (c) 2011, Tkachev Philipp
 	All rights reserved.
 	BSD License
-	
+
 	Modified by Glenn Ko, 2016
 	- some fixes/improvements (flickering dropdown box closing/opening issues)
 	- more options for varied use cases
 */
 ComboBox = function (object_name) {
-	// Glenn: 
+	// Glenn:
 	this.showAll = false; // optional setting flag to show all entries rather than type-hint search
 	this.unfocusOnSelect = false;  //  optional setting flag to unfocus input when select
 	var refocused = false;
-	
-	// Edit element cache 
+	// Justin
+	this.resetOnSelect = true; // optional setting flag to show all entries if you click on the down arrow
+
+	// Edit element cache
 	this.edit = document.getElementById(object_name);
-	// Items Container 
+	// Items Container
 	var ddl = document.getElementById(object_name).parentNode.getElementsByTagName('DIV');
 	this.dropdownlist = ddl[0];
 	// Current Item
@@ -27,15 +28,15 @@ ComboBox = function (object_name) {
 	this.currentitemindex = null;
 	// Visible Items Count
 	this.visiblecount = 0;
-	// Closure Object 
-	var parobject = this;   
-	
+	// Closure Object
+	var parobject = this;
+
 	// Picker
 	var pick = document.getElementById(object_name).parentNode.getElementsByTagName('SPAN');
 	pick[0].onclick =function () {
 		//alert(parobject.edit.hasfocus);
 		if (parobject.dropdownlist.style.display != "block") {
-		
+
 			parobject.edit.focus();
 		}
 	};
@@ -43,11 +44,16 @@ ComboBox = function (object_name) {
 	this.edit.onfocus = function () {
 		parobject.dropdownlist.style.display = 'block';
 		refocused = false;
+		if(parobject.resetOnSelect) {
+			for (var i=0;i < parobject.listitems.length; i++) {
+				parobject.listitems[i].style.display = 'block';
+			}
+		}
 	};
 	// Hide Items when edit lost focus
 	this.edit.onblur = function () {
 		if(allowLoose && !refocused) {
-		
+
 		setTimeout(function () {parobject.dropdownlist.style.display = 'none';}, 150);
 		}
 		refocused = false;
@@ -59,7 +65,7 @@ ComboBox = function (object_name) {
     return false;
 	}
 	parobject.dropdownlist.onmouseup = function(event) {
-	
+
 		setTimeout(function () {allowLoose = true;}, 150);
     return false;
 	}
@@ -70,7 +76,7 @@ ComboBox = function (object_name) {
 		var t = i;
 		// Binding Click Event
 		this.listitems[i].onclick = function () {
-			var upv = this.innerHTML;   
+			var upv = this.innerHTML;
 			upv = upv.replace(/\<b\>/ig, '');
 			upv = upv.replace(/\<\/b\>/ig, '');
 			parobject.edit.value = upv;
@@ -86,7 +92,7 @@ ComboBox = function (object_name) {
 			for (var i=0;i < parobject.listitems.length; i++) {
 				if (this == parobject.listitems[i]) {
 					if (parobject.currentitem) {
-						parobject.currentitem.className = parobject.currentitem.className.replace(/light/g, '')
+						parobject.currentitem.className = parobject.currentitem.className.replace(/ light/g, '')
 					}
 					parobject.currentitem = parobject.listitems[i];
 					parobject.currentitemindex = i;
@@ -97,7 +103,7 @@ ComboBox = function (object_name) {
 	};
 	// Binding OnKeyDown Event
 	this.edit.onkeydown = function (e) {
-		e = e || window.event;	
+		e = e || window.event;
 		// Move Selection Up
 		if (e.keyCode == 38) {
 			// up
@@ -109,12 +115,12 @@ ComboBox = function (object_name) {
 				do {
 					parobject.currentitemindex--;
 					cn++;
-				} 
+				}
 				while (parobject.currentitemindex>0 && parobject.listitems[parobject.currentitemindex].style.display == 'none');
 				if(parobject.currentitemindex < 0) parobject.currentitemindex = parobject.listitems.length-1;
-				
+
 				if (parobject.currentitem) {
-					parobject.currentitem.className = parobject.currentitem.className.replace(/light/g, '')
+					parobject.currentitem.className = parobject.currentitem.className.replace(/ light/g, '')
 				};
 				parobject.currentitem = parobject.listitems[parobject.currentitemindex];
 				parobject.currentitem.className += ' light';
@@ -137,9 +143,9 @@ ComboBox = function (object_name) {
 				}
 				while (parobject.currentitemindex < parobject.listitems.length && parobject.listitems[parobject.currentitemindex].style.display == 'none');
 				if(parobject.currentitemindex >= parobject.listitems.length) parobject.currentitemindex = 0;
-				
+
 				if (parobject.currentitem) {
-					parobject.currentitem.className = parobject.currentitem.className.replace(/light/g, '')
+					parobject.currentitem.className = parobject.currentitem.className.replace(/ light/g, '')
 				}
 				parobject.currentitem = parobject.listitems[parobject.currentitemindex];
 				parobject.currentitem.className += ' light';
@@ -160,15 +166,15 @@ ComboBox = function (object_name) {
 			}
 			return false;
 		}
-		
+
 	};
 	this.edit.onkeyup = function (e) {
-		e = e || window.event;	
+		e = e || window.event;
 		if (e.keyCode == 13) {
 			// enter
 
 			if (parobject.visiblecount != 0) {
-				var upv = parobject.currentitem.innerHTML;   
+				var upv = parobject.currentitem.innerHTML;
 				upv = upv .replace(/\<b\>/ig, '');
 				upv = upv .replace(/\<\/b\>/ig, '');
 				parobject.edit.value = upv;
@@ -178,9 +184,9 @@ ComboBox = function (object_name) {
 			else {
 				 parobject.edit.focus(); refocused = true;
 			}
-			
+
 			e.cancelBubble = true;
-		
+
 			return false;
 		}
 		else {
@@ -197,7 +203,7 @@ ComboBox = function (object_name) {
 			}
 			else {
 				var re = new RegExp( '('+parobject.edit.value +')',"i");
-				
+
 				var exactMatch =  parobject.edit.value;
 				for (var i=0;i < parobject.listitems.length; i++) {
 					var pv = parobject.listitems[i].innerHTML;
@@ -210,21 +216,21 @@ ComboBox = function (object_name) {
 					}
 					else {
 						// do replacement as well in case later can be visible
-						parobject.listitems[i].innerHTML = pv.replace(re, '<b>$1</b>');  
+						parobject.listitems[i].innerHTML = pv.replace(re, '<b>$1</b>');
 						parobject.listitems[i].style.display = 'none';
 					}
 				}
-				
+
 				// if visible count happens to be zero, show all elements
 				if (parobject.visiblecount == 0) {
-					
+
 					for (var i=0;i < parobject.listitems.length; i++) {
 						parobject.listitems[i].style.display = 'block';
 					}
 				}
-			
+
 			}
 		}
 	}
-	
+
 }
